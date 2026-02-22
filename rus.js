@@ -3,6 +3,7 @@
 
   function RussianMoviePlugin() {
     var currentDate = new Date().toISOString().slice(0, 10);
+    // Используем оригинальные ссылки на картинки
     var imgPath = "https://bylampa.github.io/img/";
 
     var collections = [
@@ -121,34 +122,35 @@
 
   Lampa.Component.add("rus_movie", function (object) {
     var scroll = new Lampa.Scroll({ mask: true, over: true });
-    var container = $('<div class="category-full"></div>');
+    // Добавляем класс card--wide к контейнеру, чтобы сетка понимала, что карточки широкие
+    var container = $('<div class="category-full card--wide"></div>');
     var plugin = new RussianMoviePlugin();
 
-    // Lampa дергает create первой
     this.create = function () {
       this.build();
     };
 
-    // Обязательный метод build, из-за отсутствия которого была ошибка
     this.build = function () {
       var cards = plugin.getCardsData();
 
       cards.forEach(function (item) {
-        // Создаем карточку безопасным способом вручную (класс 'selector' важен для фокуса!)
+        // ИЗМЕНЕНИЯ ЗДЕСЬ:
+        // Мы задаем контейнеру card__view относительное позиционирование и паддинг снизу ~56%.
+        // Это принудительно создает пропорцию 16:9.
+        // Саму картинку мы позиционируем абсолютно, чтобы она вписалась в этот контейнер.
         var card = $(
           '<div class="card selector">' +
-            '<div class="card__view">' +
+            '<div class="card__view" style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">' +
             '<img class="card__img" src="' +
             item.img +
-            '" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" />' +
+            '" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" />' +
             "</div>" +
-            '<div class="card__title" style="text-align: center; margin-top: 8px;">' +
+            '<div class="card__title" style="text-align: center; margin-top: 8px; font-size: 1.1em;">' +
             item.title +
             "</div>" +
             "</div>",
         );
 
-        // Обработка клика
         card.on("hover:enter", function () {
           Lampa.Activity.push({
             url: item.url,
@@ -165,7 +167,6 @@
       scroll.append(container);
     };
 
-    // Правильная инициализация контроллера для пульта
     this.start = function () {
       Lampa.Controller.add("content", {
         toggle: function () {
