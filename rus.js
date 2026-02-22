@@ -17,29 +17,18 @@
       { title: "ТНТ", img: imgPath + "tnt.jpg", id: 1191 },
     ];
 
-    this.createContent = function () {
+    // Подготовка данных для карточек
+    this.getCards = function () {
       return collections.map((item) => {
         let requestUrl = `discover/tv?with_networks=${item.id}&sort_by=first_air_date.desc&air_date.lte=${currentDate}`;
-
         if (item.id === "ivi") {
           requestUrl = `discover/movie?with_original_language=ru&sort_by=popularity.desc&primary_release_date.lte=${currentDate}`;
         }
 
-        // Исправленная структура объекта: убираем Lampa.Card.only
         return {
           title: item.title,
           img: item.img,
-          card_view: "wide", // Указываем тип карточки напрямую
-          params: {
-            style: "tile",
-          },
-          data: {
-            url: requestUrl,
-            title: item.title,
-            component: "category_full",
-            source: "tmdb",
-            page: 1,
-          },
+          url: requestUrl,
         };
       });
     };
@@ -63,29 +52,80 @@
     };
   }
 
+  // Компонент отрисовки
   Lampa.Component.add("rus_movie", function (object) {
-    const plugin = new RussianMoviePlugin();
+    var scroll = new Lampa.Scroll({ mask: true, over: true });
+    var container = $('<div class="category-full"></div>');
+    var plugin = new RussianMoviePlugin();
+
     this.create = function () {
-      const results = plugin.createContent();
-      // Используем стандартный билд без лишних оберток
-      this.build({
-        results: results,
-        onBack: () => {
-          Lampa.Activity.backward();
-        },
+      var cardsData = plugin.getCards();
+      var self = this;
+
+      cardsData.forEach(function (item) {
+        // Создаем карточку вручную
+        var card = new Lampa.Card(
+          {
+            title: item.title,
+            img: item.img,
+          },
+          {
+            card_view: "wide",
+          },
+        );
+
+        card.create();
+
+        // Клик по карточке
+        card.onSelect = function () {
+          Lampa.Activity.push({
+            url: item.url,
+            title: item.title,
+            component: "category_full",
+            source: "tmdb",
+            page: 1,
+          });
+        };
+
+        container.append(card.render());
       });
+
+      scroll.append(container);
     };
 
     this.render = function () {
-      return this.build().render();
+      return scroll.render();
+    };
+
+    this.pause = function () {};
+    this.active = function () {
+      Lampa.Controller.add("content", {
+        toggle: function () {
+          Lampa.Controller.toggle("content");
+        },
+        left: function () {
+          Lampa.Controller.toggle("menu");
+        },
+        up: function () {
+          Lampa.Controller.toggle("head");
+        },
+        back: function () {
+          Lampa.Activity.backward();
+        },
+      });
+      Lampa.Controller.toggle("content");
+    };
+    this.destroy = function () {
+      scroll.destroy();
+      container.empty();
     };
   });
 
-  // Инициализация
+  // Запуск
   if (window.appready) {
     new RussianMoviePlugin().initMenu();
   } else {
-    Lampa.Listener.follow("app", (e) => {
+    Lampa.Listener.follow("app", function (e) {
       if (e.type == "ready") new RussianMoviePlugin().initMenu();
     });
   }
