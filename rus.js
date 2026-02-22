@@ -5,7 +5,6 @@
     var currentDate = new Date().toISOString().slice(0, 10);
     var imgPath = "https://bylampa.github.io/img/";
 
-    // Полный список из оригинального плагина
     var collections = [
       {
         title: "Русские фильмы",
@@ -125,14 +124,32 @@
     var container = $('<div class="category-full"></div>');
     var plugin = new RussianMoviePlugin();
 
+    // Lampa дергает create первой
     this.create = function () {
+      this.build();
+    };
+
+    // Обязательный метод build, из-за отсутствия которого была ошибка
+    this.build = function () {
       var cards = plugin.getCardsData();
 
       cards.forEach(function (item) {
-        // Используем безопасный метод создания карточек
-        var card = new Lampa.Card(item, { card_view: "wide" });
-        card.create();
-        card.onSelect = function () {
+        // Создаем карточку безопасным способом вручную (класс 'selector' важен для фокуса!)
+        var card = $(
+          '<div class="card selector">' +
+            '<div class="card__view">' +
+            '<img class="card__img" src="' +
+            item.img +
+            '" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" />' +
+            "</div>" +
+            '<div class="card__title" style="text-align: center; margin-top: 8px;">' +
+            item.title +
+            "</div>" +
+            "</div>",
+        );
+
+        // Обработка клика
+        card.on("hover:enter", function () {
           Lampa.Activity.push({
             url: item.url,
             title: item.title,
@@ -140,23 +157,34 @@
             source: "tmdb",
             page: 1,
           });
-        };
-        container.append(card.render());
+        });
+
+        container.append(card);
       });
 
       scroll.append(container);
     };
 
+    // Правильная инициализация контроллера для пульта
     this.start = function () {
       Lampa.Controller.add("content", {
         toggle: function () {
-          Lampa.Controller.toggle("content");
-        },
-        up: function () {
-          Lampa.Controller.toggle("head");
+          Lampa.Controller.collectionSet(scroll.render());
+          Lampa.Controller.collectionFocus(false, scroll.render());
         },
         left: function () {
-          Lampa.Controller.toggle("menu");
+          if (Lampa.Navigator.canmove("left")) Lampa.Navigator.move("left");
+          else Lampa.Controller.toggle("menu");
+        },
+        right: function () {
+          if (Lampa.Navigator.canmove("right")) Lampa.Navigator.move("right");
+        },
+        up: function () {
+          if (Lampa.Navigator.canmove("up")) Lampa.Navigator.move("up");
+          else Lampa.Controller.toggle("head");
+        },
+        down: function () {
+          if (Lampa.Navigator.canmove("down")) Lampa.Navigator.move("down");
         },
         back: function () {
           Lampa.Activity.backward();
@@ -168,7 +196,6 @@
     this.render = function () {
       return scroll.render();
     };
-    this.active = function () {};
     this.pause = function () {};
     this.stop = function () {};
     this.destroy = function () {
