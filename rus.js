@@ -3,16 +3,94 @@
 
   function RussianMoviePlugin() {
     var currentDate = new Date().toISOString().slice(0, 10);
-    // Используем прямые ссылки на иконки, чтобы избежать проблем с путями
     var imgPath = "https://bylampa.github.io/img/";
 
+    // Полный список из оригинального плагина
     var collections = [
-      { title: "Premier", img: imgPath + "premier.jpg", id: 2859 },
-      { title: "КиноПоиск", img: imgPath + "kinopoisk.jpg", id: 3827 },
-      { title: "Wink", img: imgPath + "wink.jpg", id: 3871 },
-      { title: "KION", img: imgPath + "kion.jpg", id: 4085 },
-      { title: "Okko", img: imgPath + "okko.jpg", id: 3923 },
-      { title: "START", img: imgPath + "start.jpg", id: 2493 },
+      {
+        title: "Русские фильмы",
+        img: imgPath + "rus_movie.jpg",
+        url:
+          "discover/movie?with_original_language=ru&sort_by=primary_release_date.desc&primary_release_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "Русские сериалы",
+        img: imgPath + "rus_tv.jpg",
+        url:
+          "discover/tv?with_original_language=ru&sort_by=first_air_date.desc&air_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "Русские мультфильмы",
+        img: imgPath + "rus_mult.jpg",
+        url:
+          "discover/movie?with_genres=16&with_original_language=ru&sort_by=primary_release_date.desc&primary_release_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "Wink",
+        img: imgPath + "wink.jpg",
+        url:
+          "discover/tv?with_networks=3871&sort_by=first_air_date.desc&air_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "Premier",
+        img: imgPath + "premier.jpg",
+        url:
+          "discover/tv?with_networks=2859&sort_by=first_air_date.desc&air_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "KION",
+        img: imgPath + "kion.jpg",
+        url:
+          "discover/tv?with_networks=4085&sort_by=first_air_date.desc&air_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "ИВИ",
+        img: imgPath + "ivi.jpg",
+        url:
+          "discover/tv?with_networks=119&sort_by=popularity.desc&first_air_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "Okko",
+        img: imgPath + "okko.jpg",
+        url:
+          "discover/tv?with_networks=3923&sort_by=first_air_date.desc&air_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "КиноПоиск",
+        img: imgPath + "kinopoisk.jpg",
+        url:
+          "discover/tv?with_networks=3827&sort_by=first_air_date.desc&air_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "START",
+        img: imgPath + "start.jpg",
+        url:
+          "discover/tv?with_networks=2493&sort_by=first_air_date.desc&air_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "СТС",
+        img: imgPath + "sts.jpg",
+        url:
+          "discover/tv?with_networks=5806&sort_by=first_air_date.desc&air_date.lte=" +
+          currentDate,
+      },
+      {
+        title: "ТНТ",
+        img: imgPath + "tnt.jpg",
+        url:
+          "discover/tv?with_networks=1191&sort_by=first_air_date.desc&air_date.lte=" +
+          currentDate,
+      },
     ];
 
     this.initMenu = function () {
@@ -38,17 +116,7 @@
     };
 
     this.getCardsData = function () {
-      return collections.map(function (item) {
-        return {
-          title: item.title,
-          img: item.img,
-          url:
-            "discover/tv?with_networks=" +
-            item.id +
-            "&sort_by=first_air_date.desc&air_date.lte=" +
-            currentDate,
-        };
-      });
+      return collections;
     };
   }
 
@@ -56,13 +124,12 @@
     var scroll = new Lampa.Scroll({ mask: true, over: true });
     var container = $('<div class="category-full"></div>');
     var plugin = new RussianMoviePlugin();
-    var lastFocus;
 
     this.create = function () {
-      var self = this;
       var cards = plugin.getCardsData();
 
       cards.forEach(function (item) {
+        // Используем безопасный метод создания карточек
         var card = new Lampa.Card(item, { card_view: "wide" });
         card.create();
         card.onSelect = function () {
@@ -101,14 +168,9 @@
     this.render = function () {
       return scroll.render();
     };
-
-    this.active = function () {
-      // Больше не вызываем start() здесь, чтобы не было рекурсии
-    };
-
+    this.active = function () {};
     this.pause = function () {};
-    this.stop = function () {}; // Добавили пустой stop на всякий случай
-
+    this.stop = function () {};
     this.destroy = function () {
       scroll.destroy();
       container.empty();
